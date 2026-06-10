@@ -16,9 +16,9 @@
     '#avatar-widget-root .aw-bubble{transition:transform .15s, box-shadow .15s;}'
     + '#avatar-widget-root .aw-bubble:hover{transform:scale(1.07);}'
     + '#avatar-widget-root .aw-bubble:active{transform:scale(.95);}'
-    + '#avatar-widget-root .aw-bubble:focus-visible{outline:3px solid rgba(47,93,84,.45);outline-offset:3px;}'
+    + '#avatar-widget-root .aw-bubble:focus-visible{outline:3px solid rgba(91,84,232,.45);outline-offset:3px;}'
     + '#avatar-widget-root .aw-bubble::after{content:"";position:absolute;inset:0;border-radius:50%;animation:awpulse 2.2s ease-out infinite;pointer-events:none;}'
-    + '@keyframes awpulse{0%{box-shadow:0 0 0 0 rgba(47,93,84,.5);}70%{box-shadow:0 0 0 13px rgba(47,93,84,0);}100%{box-shadow:0 0 0 0 rgba(47,93,84,0);}}';
+    + '@keyframes awpulse{0%{box-shadow:0 0 0 0 rgba(91,84,232,.5);}70%{box-shadow:0 0 0 13px rgba(91,84,232,0);}100%{box-shadow:0 0 0 0 rgba(91,84,232,0);}}';
   (document.head || document.documentElement).appendChild(awStyle);
 
   // 1) 找出自己的位置，推算 widget.html 的網址（可用 data-widget 覆蓋）
@@ -70,7 +70,7 @@
   bubble.style.cssText = [
     'position:absolute', 'right:2px', 'bottom:2px', 'width:64px', 'height:64px',
     'border:0', 'border-radius:50%', 'cursor:pointer', 'font-size:28px',
-    'background:linear-gradient(135deg,#3f7a6c,#2f5d54)', 'color:#fff',
+    'background:linear-gradient(135deg,#7d78f0,#5b54e8)', 'color:#fff',
     'box-shadow:0 8px 22px rgba(0,0,0,.3)',
     'display:none', 'align-items:center', 'justify-content:center'
   ].join(';');
