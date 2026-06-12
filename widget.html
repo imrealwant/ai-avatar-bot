@@ -109,7 +109,6 @@
   <script src="https://cdn.jsdelivr.net/npm/pixi-live2d-display@0.4.0/dist/cubism4.min.js"></script>
   <script src="knowledge.js"></script>
 
-  <!-- M4b：WebLLM（瀏覽器內跑小模型，零金鑰）。用 module 載入，把控制權掛到 window.LLM -->
   <script type="module">
     import * as webllm from "https://esm.run/@mlc-ai/web-llm";
     const LLM_MODEL = "Qwen2.5-1.5B-Instruct-q4f16_1-MLC"; // 中文不錯、約 1.1GB、首次下載後會被快取
@@ -289,8 +288,31 @@
     else fire();
   }
 
-  // ===== 大腦：M4 檢索 + M4b（WebLLM）生成 =====
-  // 中文不好斷詞，改用「字元 bigram（相鄰兩字）」相似度，對中文很有效、又不用任何函式庫。
+  // ===== 大腦：直接串接 Apps Script API =====
+  async function answer(q) {
+    q = (q || '').trim();
+    if (!q) {
+      return '我好像沒聽清楚，可以再說一次嗎？';
+    }
+    try {
+      const apiUrl = 'https://script.google.com/macros/s/AKfycbwpkS0mamdBinNiw5Itp29DLs3UZvNwr07PATTT9ca16yoNThf5hoisp-Sl4dSv4vI9/exec';
+      showBubble('讓我想想…');
+      
+      const response = await fetch(apiUrl + '?q=' + encodeURIComponent(q));
+      const data = await response.json();
+      
+      if (data && data.answer) {
+        return data.answer;
+      }
+    } catch (err) {
+      console.error('API 查詢失敗：', err);
+    }
+    
+    // 如果 API 失敗，退回到原本的本地知識庫（作為保險後備）
+    return brain(q);
+  }
+
+  // 原本的本地檢索式回答（當作 API 斷線時的備用機制）
   function bigrams(s) {
     s = (s || '').toLowerCase().replace(/[\s，。、？！,.?!~～]/g, '');
     const g = [];
@@ -310,11 +332,6 @@
     for (const t of terms) { if (t.length >= 2 && q.includes(t)) score = Math.max(score, 0.5 + t.length * 0.04); }
     return score;
   }
-  function topK(q, k) {
-    return (window.KB || []).map(e => ({ e, s: scoreEntry(q, e) }))
-      .sort((a, b) => b.s - a.s).slice(0, k).filter(x => x.s > 0.05).map(x => x.e);
-  }
-  // 檢索式回答（零金鑰、即時、永遠可用的後備）
   function brain(qRaw) {
     const q = (qRaw || '').trim();
     if (!q) return '我好像沒聽清楚，可以再說一次嗎？';
@@ -322,24 +339,6 @@
     for (const e of (window.KB || [])) { const s = scoreEntry(q, e); if (s > bestScore) { bestScore = s; best = e; } }
     if (best && bestScore >= 0.16) return best.a;
     return '你問的是「' + q + '」對吧？這題我的知識庫還沒收錄～你可以問我「怎麼安裝」「怎麼換成我的角色」「要不要錢」「麥克風怎麼用」這些喔。';
-  }
-  // 有啟用 WebLLM 時，用「檢索到的資料 + LLM」生成更自然的回答；否則退回檢索式
-  async function answer(q) {
-    q = (q || '').trim();
-    if (!q) return '我好像沒聽清楚，可以再說一次嗎？';
-    if (window.LLM && window.LLM.state === 'ready') {
-      const ctx = topK(q, 3).map(e => 'Q：' + e.q + '\nA：' + e.a).join('\n---\n');
-      const messages = [
-        { role: 'system', content: '你是「可嵌入任何網站的語音虛擬人元件」的示範助手。主題是教人「怎麼把這個元件裝到自己的網站、怎麼換成自己的角色、怎麼使用」。請用繁體中文、口語、最多兩三句話簡短回答。優先依據【參考資料】回答；資料沒有的就用常識簡短回應，不確定就老實說不知道。\n\n【參考資料】\n' + (ctx || '（無）') },
-        { role: 'user', content: q }
-      ];
-      try {
-        showBubble('讓我想想…');
-        const out = await window.LLM.chat(messages);
-        if (out && out.trim()) return out.trim();
-      } catch (e) { console.warn('LLM error', e); }
-    }
-    return brain(q);
   }
 
   function handleUser(text) {
