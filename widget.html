@@ -325,22 +325,35 @@
   }
   // 有啟用 WebLLM 時，用「檢索到的資料 + LLM」生成更自然的回答；否則退回檢索式
   async function answer(q) {
-    q = (q || '').trim();
-    if (!q) return '我好像沒聽清楚，可以再說一次嗎？';
-    if (window.LLM && window.LLM.state === 'ready') {
-      const ctx = topK(q, 3).map(e => 'Q：' + e.q + '\nA：' + e.a).join('\n---\n');
-      const messages = [
-        { role: 'system', content: '你是「可嵌入任何網站的語音虛擬人元件」的示範助手。主題是教人「怎麼把這個元件裝到自己的網站、怎麼換成自己的角色、怎麼使用」。請用繁體中文、口語、最多兩三句話簡短回答。優先依據【參考資料】回答；資料沒有的就用常識簡短回應，不確定就老實說不知道。\n\n【參考資料】\n' + (ctx || '（無）') },
-        { role: 'user', content: q }
-      ];
-      try {
-        showBubble('讓我想想…');
-        const out = await window.LLM.chat(messages);
-        if (out && out.trim()) return out.trim();
-      } catch (e) { console.warn('LLM error', e); }
-    }
-    return brain(q);
-  }
+q = (q || '').trim();
+
+if (!q) {
+return '我好像沒聽清楚，可以再說一次嗎？';
+}
+
+try {
+
+```
+const apiUrl =
+'https://script.google.com/macros/s/AKfycbwpkS0mamdBinNiw5Itp29DLs3UZvNwr07PATTT9ca16yoNThf5hoisp-Sl4dSv4vI9/exec';
+
+const response = await fetch(
+  apiUrl + '?q=' + encodeURIComponent(q)
+);
+
+const data = await response.json();
+
+if (data.answer) {
+  return data.answer;
+}
+```
+
+} catch (err) {
+console.error(err);
+}
+
+return '抱歉，目前查詢失敗，請稍後再試。';
+}
 
   function handleUser(text) {
     if (text) showBubble('你：' + text);
