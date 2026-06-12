@@ -38,7 +38,6 @@
   }
   .ctrl:hover { background:rgba(255,255,255,.26); }
   .ctrl:active { transform:scale(.93); }
-  .ctrl:focus-visible { outline:2px solid #fff; outline-offset:2px; }
   .ctrl.primary { background:linear-gradient(135deg,var(--brand-2),var(--brand)); padding:0 13px; box-shadow:0 3px 10px rgba(0,0,0,.25); }
   .ctrl.listening { background:linear-gradient(135deg,#e74c3c,#c0392b)!important; animation:pulse 1.1s infinite; }
   @keyframes pulse { 0%,100%{ box-shadow:0 0 0 0 rgba(231,76,60,.55);} 50%{ box-shadow:0 0 0 7px rgba(231,76,60,0);} }
@@ -86,14 +85,14 @@
     <div id="suggestions"></div>
     <div id="control-bar">
       <div class="dock-row">
-        <input id="type-input" type="text" maxlength="200" placeholder="打字問我也可以…" />
-        <button class="ctrl primary" id="btn-send">➤</button>
+        <input id="type-input" type="text" maxlength="200" placeholder="打字問我也可以…" aria-label="輸入文字問題" />
+        <button class="ctrl primary" id="btn-send" aria-label="送出文字問題"><span aria-hidden="true">➤</span></button>
       </div>
-      <div class="dock-row" role="toolbar">
-        <button class="ctrl primary" id="btn-mic">🎤 說話</button>
-        <button class="ctrl" id="btn-mute">🔊</button>
-        <button class="ctrl" id="btn-speed">1.0×</button>
-        <button class="ctrl" id="btn-close">✕</button>
+      <div class="dock-row" role="toolbar" aria-label="虛擬人控制列">
+      <button class="ctrl primary" id="btn-mic"   aria-label="開始語音對話"><span aria-hidden="true">🎤</span> 說話</button>
+      <button class="ctrl" id="btn-mute"  aria-label="靜音" aria-pressed="false"><span aria-hidden="true">🔊</span></button>
+      <button class="ctrl" id="btn-speed" aria-label="調整語速">1.0×</button>
+      <button class="ctrl" id="btn-close" aria-label="收起助理"><span aria-hidden="true">✕</span></button>
       </div>
     </div>
   </div>
@@ -222,7 +221,7 @@
     isSpeaking = true;
   }
 
-  /* ===== 大腦：串接你的 Apps Script API ===== */
+  /* ===== 大腦：直接串接 Apps Script API ===== */
   async function answer(q) {
     q = (q || '').trim();
     if (!q) return '我好像沒聽清楚，可以再說一次嗎？';
@@ -319,13 +318,14 @@
         };
       } catch (e) {}
 
-      setTimeout(() => showBubble('點 🎤 說話、或直接打字問我 👋'), 700);
+      setTimeout(() => showBubble('我是一個可以嵌入任何網站的右下角語音 AI 虛擬人。我會聽你說話、回答、開口講話與對嘴，全部在你的瀏覽器裡搞定。'), 700);
       postToParent('ready');
     } catch (err) { console.error(err); }
   }
 
   document.getElementById('btn-close').onclick = () => postToParent('close');
 
+  /* ===== 修正重點：確保按鈕點擊與發送事件確實綁定 ===== */
   (function renderSuggestions() {
     const box = document.getElementById('suggestions');
     const SUGGESTIONS = ['怎麼安裝？', '怎麼換成我的角色？'];
